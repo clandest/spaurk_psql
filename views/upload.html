@@ -1,0 +1,534 @@
+
+{% extends "template.html" %}
+
+{% block message %}{{ messages }}{% endblock %}
+
+{% block profile %}{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block main %}
+
+<div class="form upload-form">
+	<div class="preview">
+		<div class="post" id="Discover"> <!-- START OF POST -->
+			<div class="postHeader">
+				 <div class="postTitle">
+					<div class="postArtist" id="postArtist">Artist</div>
+					<div class="postSong" id="postSong">Title</div>
+				</div>
+			</div>
+			<div class="postBody" id="albumImage">
+				<div class="postContent">
+					<span id="playTime" class="playTime"><span id="start">0:00</span>/<span id="stop">0:00</span></span>
+					<span id="playBtn" class="play"></span>
+					<div class="postTags" id="postTags">
+						<span>LFBass</span> <span>NewHit</span> <span>Drop</span> <span>Solo</span> <span>Brrwap</span>
+					</div>
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+		</div> <!-- END OF POST -->
+	</div>
+
+<form name="uploadForm" action="" method="POST" enctype="multipart/form-data">
+<input type="file" id="fileElem" name="fileElem" accept="audio/*" style="display:none" onchange="handleFile(this.files)" require>
+<input type="file" id="imageElem" name="imageElem" accept="image/*" style="display:none" onchange="handleImage(this.files)">
+<audio id="audio" autoplay="false" data-isPlaying="0"></audio>
+
+	<div class="form-upload">
+		<a href="#" id="fileSelect">Select a .mp3 file</a><br>
+		<div id="fileList"><p>No files selected!</p></div>
+	</div>
+
+	<div class="form-upload">
+		<span>Set Range:</span>
+		<div class="noUi-extended" id="seekSlider"></div>
+	</div>
+
+	<div class="form-upload form-start" style="float:left">
+		<label for="start">Start:</label>
+		<input type="text" name="start" id="fileStart" placeholder="0:00" maxlength="5" require>
+	</div>
+	<div class="form-upload form-stop" style="float:left">
+		<label for="stop">Stop:</label>
+		<input type="text" name="stop"  id="fileStop" placeholder="0:35" maxlength="5" require>
+	</div>
+
+	<div class="clear"></div>
+	
+	<div class="form-upload" style="float:left">
+		<label for="title">Title:</label>
+		<input type="text" name="title" id="title" maxlength="40" require>
+	</div>
+
+	<div class="form-upload" style="float:left">
+		<label for="artist">Artist:</label>
+		<input type="text" name="artist" id="artist" maxlength="20" require>
+	</div>
+
+	<div class="clear"></div>
+
+	<div class="form-upload" style="float:left">
+		<label for="genre">Genre:</label>
+		<input type="text" name="genre" id="genre" require>
+		<select name="genreList" form="uploadForm">
+			<option value="Genres">Genres:</option>
+			<option value="HeavyMetal">Heavy Metal</option>	
+			<option value="RocknRoll">Rock n' Roll</option>	
+			<option value="Alternative">Alternative</option>	
+			<option value="HardRock">Hard Rock</option>	
+			<option value="Classical">Classical</option>	
+			<option value="Pop">Pop</option>	
+			<option value="PunkRock">Punk Rock</option>	
+			<option value="Blues">Blues</option>	
+			<option value="Jazz">Jazz</option>	
+			<option value="Rap">Rap</option>	
+		</select>
+	</div>
+
+
+	<div class="form-upload" style="float:left">
+		<label for="tags">Tags:</label>
+		<input type="text" name="tags" id="tags" maxlength="60">
+		<label for="categoryList">Category</label>
+		<select name="categoryList">
+			<option value="Discover">Discover</option>
+			<option value="Experimental">Experimental</option>
+			<option value="Independent">Independent</option>
+			<option value="Solo">Solo</option>
+			<option value="LFG">Looking for Group</option>
+			<option value="LFM">Looking for Members</option>
+		</select>
+
+	</div>
+
+	<div class="clear"></div>
+
+	<div class="form-upload">
+		<a href="#" id="imageSelect">select an image file</a><br>
+		<div id="imageList"><p>No image selected!</p></div>
+	</div>
+
+	<input class="btn-login" type="submit" name="upload" value="Make New Upload">
+
+</form>
+</div>
+
+<script src="/js/nouislider.min.js"></script>
+<script src="/js/musicmetadata.js"></script>
+
+<script>
+
+window.URL = window.URL || window.webkitURL;
+
+	var isIE = /*@cc_on!@*/false || !!document.documentMode;
+	// Edge 20+
+	var isEdge = !isIE && !!window.StyleMedia;
+
+	var form = document.forms.namedItem("uploadForm");
+	var preview = document.querySelector(".upload-form");
+	var fileImage;
+	var fileMP3;
+	var bgImage;
+
+	var slider = document.getElementById("seekSlider");
+	noUiSlider.create(slider, {
+			start: 0,
+			range:{
+					'min': 0,
+					'max': 100
+			},
+			step: 1,
+	});
+
+	preview.addEventListener('click', function(e){
+		if(e.target.id == "playBtn"){
+			playPause(e);
+		}
+
+		if(e.target.id == "fileSelect"){
+			var fileElem = document.getElementById("fileElem");
+
+			if(fileElem)
+				fileElem.click();
+
+			e.preventDefault();
+		}
+
+		if(e.target.id == "imageSelect"){
+			var imageElem = document.getElementById("imageElem");
+
+			if(imageElem)
+				imageElem.click();
+
+			e.preventDefault();
+		}
+	});
+
+	preview.addEventListener("change", function(e){
+		if(e.target.id == "fileStart")
+			setStartTime();
+
+		if(e.target.id == "fileStop")
+			setStopTime();
+	});
+
+	preview.addEventListener("input", function(e){
+		if(e.target.id == "title")
+			setTitle();
+
+		if(e.target.id == "artist")
+			setArtist();
+
+		if(e.target.id == "tags")
+			setTags();
+	});
+
+	document.getElementById("playBtn").addEventListener('mouseover', function(e){
+		showAlbumMouseOver();
+	});
+
+	document.getElementById("playBtn").addEventListener('mouseleave', function(e){
+		showTagsMouseOut();
+	});
+
+	slider.noUiSlider.on("slide", function(values, handle){
+		var audio = document.getElementById("audio");
+		if(audio.src)
+			updateSliderTime(values, handle);
+	});
+
+	form.addEventListener("submit", function(e){
+		e.preventDefault();
+		if(!isIE || !isEdge){
+			formData = new FormData(form);
+			formData.set('fileElem', fileMP3);
+
+			getAlbumCover(fileMP3, function(cover){
+				formData.set('imageElem', cover);
+
+				var req = new XMLHttpRequest();
+				req.open("POST", "upload", true);
+				req.onload = function(event){
+					if(req.status == 204){
+						console.log("Uploaded!");
+						document.location.href = "/";
+					}else
+						console.log("error" + req.status);
+				}
+				req.send(formData);
+			});
+		}
+	}, false);
+
+function getAlbumCover(data, callback){
+	musicmetadata(data, function(err, result){
+		if(err)
+			throw err;
+
+		var picture = result.picture[0];
+		if(picture)
+			var albumBlob = new Blob([picture.data], {'type':'image/' + picture.format});
+
+		if(typeof fileImage === 'undefined'){
+			callback(albumBlob);
+		}else{
+			callback(fileImage);
+		}
+	});
+
+}
+
+function handleFile(file){
+	var fileList = document.getElementById("fileList");
+
+	if(!file.length)
+		fileList.innerHTML = "<p>No files selected</p>";
+	else{
+		var audio = document.getElementById("audio");
+		fileMP3 = file[0];
+		audio.src = window.URL.createObjectURL(fileMP3);
+		audio.pause();
+		audio.addEventListener('loadeddata', function(){
+			setPreviewDuration(audio);
+		});
+		showMetaData(fileMP3);
+		fileList.innerHTML = "<p>" + file.name + "</p>";
+		slider.noUiSlider.set(value = 0);
+	}
+}
+
+function handleImage(file){
+	var imageList = document.getElementById("imageList");
+
+	if(!file.length){
+		imageList.innerHTML = "<p>No image selected</p>";
+	}else{
+		imageList.innerHTML = "<p>" + file[0].name +  "</p>";
+		var image = document.getElementById("albumImage");
+		var url = window.URL.createObjectURL(file[0]);
+		image.style.backgroundImage = "url(" + image + ")";
+		image.style.backgroundRepeat = "no-repeat";
+		image.style.backgroundSize = "180px 146px";
+
+		fileImage = file[0]; 
+		bgImage = url;
+	}
+}
+
+function showMetaData(data){
+	musicmetadata(data, function(err, result){
+		if(err)
+			throw err;
+
+		if(result.picture.length > 0){
+			var picture = result.picture[0];
+			var url = URL.createObjectURL(new Blob([picture.data], {'type':'image/' + picture.format}));
+			var image = document.getElementById('albumImage');
+			var imageList = document.getElementById('imageList');
+
+			imageList.innerHTML = "<p>" + result.title + "." + picture.format + "</p>";
+
+			image.style.backgroundImage = "url(" + url + ")";
+			image.style.backgroundRepeat = "no-repeat";
+			image.style.backgroundSize = "180px 146px";
+
+			fileImage = undefined;
+			bgImage = url;
+
+		}else{
+			imageList.innerHTML = "<p>Pulling the album image isn't supported, please select an (album)Image</p>"	
+		}
+
+		document.getElementById('title').value = result.title;
+		document.getElementById('artist').value = result.artist;
+		document.getElementById('genre').value = result.genre;
+		document.getElementById('postSong').innerText = result.title;
+		document.getElementById('postArtist').innerText = result.artist;
+	});
+}
+
+function updateSliderTime(values, handle){
+	var audio = document.getElementById("audio");
+	var seekTo = audio.duration * (values[handle] / 100);
+	audio.currentTime = seekTo;
+
+	var currentAudioTime = convertSecondsToString(audio.currentTime);
+	var endAudioTime = convertSecondsToString(audio.currentTime + 35);
+
+	document.getElementById("fileStart").value = currentAudioTime;
+	document.getElementById("fileStop").value = endAudioTime;
+		
+}
+
+function parseStringToTime(str){
+	var regString = /^[0-9]{1,2}:[0-9]{1,2}$/;
+	var regSec = /:[0-9]{1}$/;
+	var regInt = /^[0-9]{1,4}$/;
+	var context = str.split('');
+	var length = context.length;
+
+	if(str.search(regString) > -1){
+		if(str.search(regSec) > -1){
+			var index = str.indexOf(":");
+			context.splice(index + 1, 0, "0");
+		}
+		return context.join('');
+
+	}else if(str.search(regInt) > -1){
+		if(length == 4)
+			context.splice(2, 0, ":");
+		if(length == 3)
+			context.splice(1, 0, ":");
+		if(length == 2)
+			if(str >= 60){
+				var min = Math.floor(str / 60);
+				var sec = padTimer(Math.floor(str - min * 60), "00");
+				context = min + ":" + sec;
+				return context;
+			}else{
+				context.splice(0, 0, "0:");
+			}
+		if(length == 1)
+			context.splice(0, 0, "0:0");
+		return context.join('');
+	}else{
+		return "0:00";
+	}
+}
+
+function playPause(event){
+	var audio = document.getElementById("audio");
+	if(event.target.className  == "play"){
+		event.target.className = "pause";
+		if(audio.src){
+			audio.play();
+			audio.setAttribute("data-isPlaying", "1");
+			audio.ontimeupdate = function(){ setPreviewCurrentTime(audio), seekTimeUpdate(audio) };
+			showAlbum();
+		}
+	}else{
+		event.target.className = "play";
+		audio.setAttribute("data-isPlaying", "0");
+		audio.pause();
+		showTags();
+	}
+}
+
+function padTimer(time, padding){
+	var oldTime = "" + time;
+	var pad = padding;
+	return pad.substring(0, pad.length - oldTime.length) + oldTime;
+}
+
+function convertSecondsToString(seconds){
+	var min = Math.floor(seconds / 60);
+	var sec = Math.floor(seconds - min * 60);
+
+	sec = padTimer(sec, "00");
+
+	return min + ":" + sec;
+}
+
+function convertStringToSeconds(str){
+	var result = str.split(":");
+	var min = parseInt(result[0], 10);
+	var sec = parseInt(result[1], 10);
+
+	var newMin = min * 60;
+	var newSec = newMin + sec;
+	var newTime = newSec;
+
+	return newTime;
+}
+
+function setPreviewCurrentTime(audio){
+	var start = document.getElementById("start");
+
+	start.innerText = convertSecondsToString(audio.currentTime);
+}
+
+function setPreviewDuration(audio){
+	var stop = document.getElementById("stop");
+
+	stop.innerText = convertSecondsToString(audio.duration);
+}
+
+function showAlbum(){
+	document.getElementById("postTags").style.visibility = "hidden";
+	if(bgImage)
+		document.getElementById("albumImage").style.backgroundImage = "url(" + bgImage + ")";
+	document.getElementById("playTime").style.display = "block";
+}
+
+function showAlbumMouseOver(){
+	var isPlayed = document.getElementById("audio").getAttribute("data-isPlaying");
+	if(isPlayed == 0)
+		showAlbum();
+}
+
+function showTags(){
+	document.getElementById("postTags").style.visibility = "visible";
+	document.getElementById("albumImage").style.backgroundImage = "none";
+	document.getElementById("playTime").style.display = "none";
+}
+
+function showTagsMouseOut(){
+	var isPlayed = document.getElementById("audio").getAttribute("data-isPlaying");
+	if(isPlayed == 0)
+		showTags();
+}
+
+function seekTimeUpdate(audio){
+	var newTime = audio.currentTime * (100 / audio.duration);
+
+	slider.noUiSlider.set(newTime);
+}
+
+function setStartTime(){
+	var audio = document.getElementById("audio");
+	var start = document.getElementById("fileStart");
+	var startInput = parseStringToTime(start.value);
+	var startTime = convertStringToSeconds(startInput);
+	var stop = document.getElementById("fileStop");
+	var stopInput = parseStringToTime(stop.value);
+	var stopTime = convertStringToSeconds(stopInput);
+	
+	start.value = startInput;
+	
+	audio.currentTime = startTime;
+
+	if(startTime >= stopTime){
+		stop.value = convertSecondsToString(startTime + 35);
+	}
+	if(startTime <= stopTime - 35){
+		stop.value = convertSecondsToString(startTime + 35);
+	}
+
+}
+
+function setStopTime(){
+	var start = document.getElementById("fileStart");
+	var startInput = parseStringToTime(start.value);
+	var startTime = convertStringToSeconds(startInput);
+	var stop = document.getElementById("fileStop");
+	var stopInput = parseStringToTime(stop.value);
+	var stopTime = convertStringToSeconds(stopInput);
+
+	stop.value = stopInput;
+
+	if(stopTime >= startTime + 35){
+		start.value = convertSecondsToString(stopTime - 35);
+	}
+
+	if(stopTime <= startTime){
+		stop.value = convertSecondsToString(startTime + 35);
+	}
+}
+
+function setTitle(){
+	var title = document.getElementById("title");
+	var postTitle = document.getElementById("postSong");
+	
+	postTitle.innerText = title.value;
+}
+
+function setArtist(){
+	var artist = document.getElementById("artist");
+	var postArtist = document.getElementById("postArtist");
+	
+	postArtist.innerText = artist.value;
+
+}
+
+function setTags(){
+var tag = document.getElementById("tags");
+var postTags = document.getElementById("postTags");
+var tags = tag.value.split(' ');
+var span = '';
+
+for(i = 0; i < tags.length; i++){
+	span += "<span>" + tags[i] + "</span>";
+}
+
+postTags.innerHTML = span;
+
+}
+
+</script>
+{% endblock %}

@@ -1,0 +1,65 @@
+
+{% extends "template.html" %}
+
+{% block message %}{{ messages }}{% endblock %}
+
+{% block profile %}{% endblock %}
+
+{% block nav %}{% endblock %}
+
+{% block main %}
+<div class="form">
+	<img id="profileImage" src="/uploads/defaultProfile.png" height="100px" width="100px">
+	<form name="registerForm" id="registerForm" action="" method="POST" enctype="multipart/form-data">
+	<input type="file" id="imageElem" name="image" accept="image/*" style="display:none" onchange="handleImage(this.files)">
+
+		<div class="form-input">
+			<input type="text" name="username" placeholder="Enter Username" required>
+		</div>
+		<div class="form-input">
+			<input type="password" name="password" id="password" placeholder="Enter Password" required>
+		</div>
+		<div class="form-input">
+			<input type="password" name="confirmPassword" id="confirmPassword" placeholder="Confirm Password" required>
+		</div>
+		<div class="form-input">
+			<input type="email" name="email" placeholder="Enter Email (optional)">
+		</div>
+		<input class="btn-login" type="submit" name="register" value="Register Account">
+		<p>Forgot Password</p>
+
+	</form>
+</div>
+
+<script>
+	var form = document.getElementById("registerForm");
+	var profileImage = document.getElementById("profileImage");
+
+
+	profileImage.addEventListener('click', function(e){
+		var imageElem = document.getElementById("imageElem");
+
+		imageElem.click();	
+
+	});
+
+	form.addEventListener('submit', function(e){
+		var password = document.getElementById("password").value;
+		var confirmPass = document.getElementById("confirmPassword").value;
+
+		if(password != confirmPass){
+			alert('you need to confirm you password');
+			e.preventDefault();
+		}
+
+	});
+
+function handleImage(file){
+		var url = window.URL.createObjectURL(file[0]);
+		profileImage.src=url;
+}
+
+
+</script>
+
+{% endblock %}

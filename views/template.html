@@ -1,0 +1,282 @@
+<!doctype html>
+<html>
+  <head>
+      <link rel="stylesheet" href="/style.css">
+      <link rel="stylesheet" href="/normalize.css">
+      <link rel="stylesheet" href="/nouislider.min.css">
+      <script src="https://apis.google.com/js/client.js?onload=onClientLoad" type="text/javascript">
+      </script>
+
+  </head>
+  
+  <body>
+    <div class="container">
+    <div class="message"> 
+    {% block message %} {{ messages }} {% endblock %}
+    </div>
+    <header>
+      <div class="bannerLogo"><a href="/"><img src="/images/spaurk_logo.png"></a></div>
+      <div class="bannerUser">
+        {% if isLogged %} 
+          <ul>
+          <li>
+						<div class="dropdown">
+							<div class="profile">
+                <a href="/p/{{ user }}"><img src="/uploads/{{ accountImage }}" height="50px" width="50px"></a>
+							<div class="dropdown-content">
+									<a href="?Alternative">Alternative</a>
+									<a href="">Electronic</a>
+									<a href="">R&B</a>
+									<a href="">Pop</a>
+									<a href="">Rock</a>
+							</div>
+
+							</div>
+						</div>
+          </li>
+          <li>
+            <a href="/logout">logout</a>
+          </li>
+          </ul>
+        {% else %}
+          <span>Username:</span>
+          <span>Password:</span>
+          <form action="/login" method="post">
+            <input type="text" name="username" >
+            <input type="password" name="password" >
+            <div id="clear"></div>
+            <input type="submit" name="login" value="login" >
+            <a href="/register" id="register">register</a>
+          </form>
+        {% endif %} 
+        
+      </div>
+    </header>
+    <main>
+		{% block profile  %}
+	<form name="profileForm" id="profileForm" action="" method="POST" enctype="multipart/form-data">
+	<input type="file" id="imageElem" name="image" accept="image/*" style="display:none" onchange="handleImage(this.files)">
+  </form>
+
+    <div class="profileImage"><img id="profileImage" src="/uploads/{{ profileImage }}" height="100px" width="100px"></div>
+		<span class="profileName">{{ userProfile }}</span>
+		<div class="profileSocial">
+      <div class="follow"><a href="/follows/{{ profileUserId }}" id="follows">[ Follow ]</a></div>
+			<div id="sound-cloud"></div>
+			<div id="band-camp"></div>
+			<div id="twitter"></div>
+		</div>
+    <div class="aboutField" id="about" data-token="0"><p id="aboutContext">{{ about }}</p></div>
+    <div class="flashBanner" id="flashBanner" data-token="0"><p id="flashBannerContext">{{ flashBanner }}</p></div>	
+		{% endblock %}
+		{% block nav %}
+		<nav>
+		<ul>
+			<li><a href="/p/{{ userProfile }}">Main</a></li>	
+			<li><a href="/p/{{ userProfile }}/watchlist">Watchlist</a></li>
+			<li><a href="/p/{{ userProfile }}/following">Following</a></li>
+			<li><a href="/p/{{ userProfile }}/comments">Comments</a></li>
+			<li><a href="/p/{{ userProfile }}/support">Support</a></li>
+		</ul>
+		</nav>
+		{% endblock %}
+    {% block main %}
+		<div class="post" id="Discover"> <!-- START OF POST -->
+			<div class="postHeader">
+				 <div class="postTitle">
+					<div class="postArtist"><a href="/id/{{ post._id }}">Artist Name</a></div>
+					<div class="postSong">This is the title of the song one more line</div>
+				</div>
+			</div>
+			<div class="postBody">
+				<div class="postContent">
+					<img src="/images/play_button.png">
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+		</div> <!-- END OF POST -->
+      <div class="post" id="Solo">
+        <div class="postHeader">
+				<div class="postTitle"></div>
+			</div>
+			<div class="postBody">
+				<div class="postContent">
+					<img src="/images/play_button.png">
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+      </div>
+      <div class="post" id="Independent">
+       <div class="postHeader">
+				<div class="postTitle"></div>
+			</div>
+			<div class="postBody">
+				<div class="postContent">
+					<img src="/images/play_button.png">
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+      </div>
+      <div class="post" id="LFG">
+        <div class="postHeader">
+				<div class="postTitle"></div>
+			</div>
+			<div class="postBody">
+				<div class="postContent">
+					<img src="/images/play_button.png">
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+      </div>
+
+
+      <div class="post" id="LFM">
+        <div class="postHeader">
+				<div class="postTitle"></div>
+			</div>
+			<div class="postBody">
+				<div class="postContent">
+					<img src="/images/play_button.png">
+				</div> 
+			</div>
+			<div class="postFooter">
+					<div class="dropdown">	
+						<img src="/images/menu.png">
+						<div class="dropdown-content">
+								<a href="?Alternative">Alternative</a>
+								<a href="">Electronic</a>
+								<a href="">R&B</a>
+								<a href="">Pop</a>
+								<a href="">Rock</a>
+						</div>
+					</div>
+				<div class="postMenu">
+					<img src="/images/bookmark.png"><img src="/images/spaurk_icon.png"> 
+				</div>
+			</div>
+      </div>
+
+
+      <div class="post" id="Experimental">
+        <div class="postHeader">
+          <div class="postTitle"></div>
+        </div>
+        <div class="postBody"></div>
+        <div class="postFooter">
+          <div class="postTitle"><div class="content"></div></div>
+          <div class="postMenu"></div>
+        </div>
+      </div>
+      <div class="post" id="Solo">
+        <div class="postHeader">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+        <div class="postBody"></div>
+        <div class="postFooter">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+      </div>
+      <div class="post" id="LFM">
+        <div class="postHeader">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+        <div class="postBody"></div>
+        <div class="postFooter">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+      </div>
+      <div class="post" id="Discover">
+        <div class="postHeader">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+        <div class="postBody"></div>
+        <div class="postFooter">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+      </div>
+      <div class="post" id="Experimental">
+        <div class="postHeader">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+        <div class="postBody"></div>
+        <div class="postFooter">
+          <div class="postTitle"></div>
+          <div class="postMenu"></div>
+        </div>
+      </div>
+
+
+    {% endblock %}
+    </main>
+    <footer></footer>
+    </div>
+    <p>Copyright 2016 spaurk.net all rights reserved</p>
+
+{% block scripts %}
+{% endblock %}
+
+  </body>
+</html>

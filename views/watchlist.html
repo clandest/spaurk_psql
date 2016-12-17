@@ -1,0 +1,215 @@
+
+{% extends "template.html" %}
+
+{% block message %}{{ messages }}{% endblock %}
+
+{% block main %}
+<div id="posts" >
+{% for post in posts %}
+<div class="post" id="{{ post.category }}" data-id="{{ post.id }}"> <!-- START OF POST -->
+	<audio src="/uploads/{{ post.audioFile }}" id="audio{{ post.id }}" data-isPlaying="0" data-start="{{ post.start }}" data-stop="{{ post.stop }}"></audio>
+	<div class="postHeader">
+		<div class="postTitle">
+			<div class="postArtist"><a href="/id/{{ post.id }}">{{ post.artist }}</a></div>
+			<div class="postSong">{{ post.title | truncate(40) }}</div>
+		</div>
+	</div>
+	<div class="postBody" id="albumImage-{{ post.id }}" {% if post.imageFile %}style="background-image: url(/uploads/{{ post.imageFile }}); background-size: 180px 146px" {% endif %}>
+		<div class="postContent">
+			<span id="playBtn" class="play" data-id="{{ post.id }}"></span>
+			<div class="postTags" id="postTags-{{ post.id }}">
+				{% if post.tags != '' %}
+				<span>{{ post.tags }}</span>
+				{% endif %}
+			</div>
+			<div id="playTime-{{ post.id }}" class="playTime"><span id="start-{{ post.id }}" class="start">0:00</span>/<span id="stop-{{ post.id }}" class="stop">0:00</span></div>
+		</div> 
+	</div>
+	<div class="postFooter">
+		<div class="dropdown">	
+			<img src="/images/menu.png">
+			<div class="dropdown-content">
+				<a href="?Alternative">Alternative</a>
+				<a href="">Electronic</a>
+				<a href="">R&B</a>
+				<a href="">Pop</a>
+				<a href="">Rock</a>
+			</div>
+		</div>
+		<div class="postMenu">
+			<a href="/watchlist/{{ post.id }}"><img src="/images/bookmark.png"></a><img src="/images/spaurk_icon.png"> 
+		</div>
+	</div>
+</div> <!-- END OF POST -->
+
+{% endfor %}
+</div>
+
+<script>
+	var posts = document.querySelectorAll("#playBtn");
+
+	posts.forEach(function(post, i){
+		var audio = document.getElementById("audio" + post.getAttribute("data-id"));
+		var album = document.getElementById("albumImage-" + post.getAttribute("data-id"));
+		var tags = document.getElementById("postTags-" + post.getAttribute("data-id"));
+		var time = document.getElementById("playTime-" + post.getAttribute("data-id"));
+		var albumImages = [];
+		setDataTime(audio);
+		albumImages[i] = album.style.backgroundImage;
+		showTagsMouseOut(audio, tags, album, time, albumImages[i]);
+		audio.addEventListener("loadeddata", function(){
+			setPreviewDuration(audio, post.getAttribute("data-id"));
+		});
+		post.onclick = function(){
+			playPause(post, audio, tags, album, time, albumImages[i]);
+		}
+
+		post.onmouseover = function(){
+			showAlbumMouseOver(audio, tags, album, time, albumImages[i]);	
+		}
+
+		post.onmouseleave = function(){
+			showTagsMouseOut(audio, tags, album, time, albumImages[i]);
+		}
+	});
+
+function playPause(post, audio, tags, album, time, albumImages){
+	var sounds = document.getElementsByTagName("audio");
+	var id = post.getAttribute("data-id");
+
+	if(post.className == "play"){
+		if(audio.src){
+			for(var i = 0; i < sounds.length; i++){
+				if(audio.id != sounds[i].id){
+					var start = convertStringToSeconds(sounds[i].dataset.start);
+					sounds[i].currentTime = start;
+					sounds[i].pause();
+					sounds[i].setAttribute("data-isPlaying", "0");
+					posts[i].className = "play";
+					showTags(tags, album, time);
+					flushScreen(id);
+				}
+			}
+			post.className = "pause";
+			audio.play();
+			audio.setAttribute("data-isPlaying", "1");
+			showAlbum(tags, album, time, albumImages);
+			audio.ontimeupdate = function(){
+				setPreviewCurrentTime(audio, post.getAttribute("data-id"));
+				setStopTime(post, audio);
+			}
+		}
+	}else{
+		post.className = "play";
+		audio.pause();
+		audio.setAttribute("data-isPlaying", "0");
+		showTags(tags, album, time);
+	}
+}
+
+function flushScreen(id){
+	var posts = document.querySelectorAll(".post");
+	for(var i = 0; i < posts.length; i++){
+		var album = document.getElementById("albumImage-" + posts[i].getAttribute("data-id"));
+		var tags = document.getElementById("postTags-" + posts[i].getAttribute("data-id"));
+		var time = document.getElementById("playTime-" + posts[i].getAttribute("data-id"));
+		if(posts[i].dataset.id != id){
+			showTags(tags, album, time);
+		}
+	}
+	
+}
+
+function setDataTime(audio){
+	var time = audio.getAttribute("data-start");
+	var setTime = convertStringToSeconds(time);
+	audio.currentTime = setTime;
+}
+
+function setStopTime(post, audio){
+	var end = audio.getAttribute("data-stop");
+	var endTime = convertStringToSeconds(end);
+
+	if(audio.currentTime >= endTime){
+		audio.pause();
+		audio.setAttribute("data-isPlaying", "0");
+		audio.currentTime = convertStringToSeconds(audio.getAttribute("data-start"));
+		post.className = "play";
+	}
+}
+
+function showAlbum(postTags, postImage, playTime, albumImage){
+	postTags.style.visibility = "hidden";
+	if(albumImage)
+		postImage.style.backgroundImage = albumImage;
+	playTime.style.display = "block";
+}
+
+function showAlbumMouseOver(audio, postTags, postImage, playTime, albumImage){
+	var isPlayed = audio.getAttribute("data-isPlaying");
+	if(isPlayed == 0)
+		showAlbum(postTags, postImage, playTime, albumImage);
+}
+
+function showTags(postTags, postImage, playTime){
+	postTags.style.visibility = "visible";
+	postImage.style.backgroundImage = "none";
+	playTime.style.display = "none";
+}
+
+function showTagsMouseOut(audio, postTags, postImage, playTime, albumImage){
+	var isPlayed = audio.getAttribute("data-isPlaying");
+	if(isPlayed == 0)
+		showTags(postTags, postImage, playTime, albumImage);
+}
+
+function setPreviewCurrentTime(audio, id){
+	var start = document.getElementById("start-" + id);
+
+	start.innerText = convertSecondsToString(audio.currentTime);
+}
+
+function setPreviewDuration(audio, id){
+	var stop = document.getElementById("stop-" + id);
+
+	stop.innerText = convertSecondsToString(audio.duration);
+}
+
+function padTimer(time, padding){
+	var oldTime = "" + time;
+	var pad = padding;
+	return pad.substring(0, pad.length - oldTime.length) + oldTime;
+}
+
+function convertSecondsToString(seconds){
+	var min = Math.floor(seconds / 60);
+	var sec = Math.floor(seconds - min * 60);
+
+	sec = padTimer(sec, "00");
+
+	return min + ":" + sec;
+}
+
+function convertStringToSeconds(str){
+	var result = str.split(":");
+	var min = parseInt(result[0], 10);
+	var sec = parseInt(result[1], 10);
+
+	var newMin = min * 60;
+	var newSec = newMin + sec;
+	var newTime = newSec;
+
+	return newTime;
+}
+
+
+</script>
+
+	{% block scripts %}
+
+	{% include "static/js/profile.js" %}
+
+	{% endblock %}
+
+{% endblock %}
+

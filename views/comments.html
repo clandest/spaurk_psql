@@ -1,0 +1,253 @@
+
+{% extends "template.html" %}
+
+{% block main %}
+<form name="commentForm" id="commentForm" action="" enctype="multipart/form-data" method="POST">
+{% if user %}
+	<div class="new-comment">
+			<textarea name="newComment" id="new-comment" form="commentForm"></textarea>
+		<div class="commentMenu">
+			<input type="submit" id="submit-btn" value="Post Comment">
+		</div>
+	</div>
+{% endif %}
+</form>
+
+
+<div class="comments" id="comments">
+<ul id="commentsList" data-replying="0">
+{% for comment in comments %}
+{% if comment.replies_id == NULL  %}
+	<li>
+		<div class="comment" data-id="{{ comment.id }}">
+			<div class="profileImage"><a href="/p/{{ comment.username }}"><img src="/uploads/{{ comment.profileImage }}" width=50 height=50 title="{{ comment.username }}  {{ comment.created_at }}"></a></div>
+			<p>{{ comment.body }}</p>
+			<div class="commentMenu">
+				<a href="" id="collapse-btn">[ - ]</a>{% if user %}<a href="" id="reply-btn" data-reply="0">[Reply]</a><a href="">[Report]</a>{% endif %}
+			</div>
+		</div>
+		<ul class="replies">
+		{% for reply in comments %}
+		{% if comment.id == reply.replies_id %}
+			<li>
+				<div class="reply" data-id="{{ reply.id }}">
+					<div class="profileImage"><a href="/p/{{ reply.username }}"><img src="/uploads/{{ reply.profileImage }}" width=40 height=40 title="{{ reply.username }}  {{ reply.created_at }}"></a></div>
+				<p>{{ reply.body }}</p>
+				<div class="commentMenu">
+					{% if user %}<a href="">[Report]</a> {% endif %}
+				</div>
+				</div>
+			</li>
+		{% endif %}
+		{% endfor %}
+		</ul>
+	</li>
+{% endif %}
+{% endfor %}
+
+</ul>
+</div>
+<div class="clear"></div>
+<script>
+	var comments = document.getElementById('commentsList');
+	var commentForm = document.getElementById('commentForm');
+	var newComment = document.getElementById('new-comment');
+
+	commentForm.addEventListener('submit', function(e){
+		e.preventDefault();
+
+		if(newComment.value == ''){
+			alert('please fill out a full comment');	
+		}else{
+			var message = newComment.value;
+			createComment(message);	
+
+			var messageData = {};
+			messageData['newComment'] = message;
+
+			var req = new XMLHttpRequest();
+			req.open("POST", "comment", true);
+			req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+			req.send(JSON.stringify(messageData));
+			newComment.value = '';
+		}
+	});
+
+	comments.addEventListener('click', function(e){
+		if(e.target.id == "reply-btn"){
+			e.preventDefault();
+			var commentsList = document.getElementById("commentsList");
+			if(commentsList.dataset.replying == "0"){
+				var replying = document.querySelector(".replying");
+				createReplyInput(e.target);
+				commentsList.dataset.replying = "1";
+			}else{
+				removeReplyInput();
+				commentsList.dataset.replying = "0";
+			}
+		}
+
+		if(e.target.id == "collapse-btn"){
+			e.preventDefault();
+			collapseReplies(e.target);
+		}
+
+		if(e.target.id == "postReply"){
+			e.preventDefault();
+			var message = document.getElementById("new-reply").value;
+			var parentUl = e.target.parentNode.parentNode.parentNode.parentNode.parentNode;
+			var commentId = createReply(parentUl, message);
+
+			var messageData = {};
+			messageData['newReply'] = message;
+			messageData['commentId'] = commentId;
+
+			var req = new XMLHttpRequest();
+			req.open("POST", "comment/reply", true);
+			req.setRequestHeader('Content-Type', 'application/json; charset=UTF-8');
+			req.send(JSON.stringify(messageData));
+			removeReplyInput();
+		}
+	});
+
+	function createComment(message){
+		var newLi = document.createElement('li');
+		var newComment = document.createElement('div');
+		var newProfileImage = document.createElement('div');
+		var newContext = document.createElement('p');
+		var newMenu = document.createElement('div');
+
+		newComment.className = "comment";
+		newProfileImage.className = "profileImage";
+		newProfileImage.innerHTML = '<img src="/uploads/{{ accountImage }}" width="50" height="50" title="{{ user }}">';
+		newMenu.className = "commentMenu";
+
+		newContext.innerText = message; 
+
+		newComment.appendChild(newProfileImage);
+		newComment.appendChild(newContext);
+		newComment.appendChild(newMenu);
+
+		newLi.appendChild(newComment);
+
+		comments.insertBefore(newLi, comments.firstChild);
+	}
+
+	function createReplyInput(event){	
+		var newReply = document.createElement('div');
+		var newForm = document.createElement('form');
+		var newInput = document.createElement('textarea');
+		var newMenu = document.createElement('div');
+		var newSubmit = document.createElement('input');
+		var parentUl = event.parentNode.parentNode.parentNode;
+		var childUl = parentUl.querySelector('.replies');
+		var newUl = document.createElement('ul');
+		var newLi = document.createElement('li');
+
+
+		newReply.className = "new-reply";
+		newForm.setAttribute("name", "newReply");
+		newForm.setAttribute("id", "newReply");
+		newForm.setAttribute("action", "");
+		newForm.setAttribute("method", "POST");
+		newForm.setAttribute("enctype", "multipart/form-data");
+		newMenu.className = "commentMenu";
+		newInput.setAttribute("name", "newReply");
+		newInput.setAttribute("id", "new-reply");
+		newInput.setAttribute("form", "newReply");
+		newSubmit.setAttribute("type", "submit");
+		newSubmit.setAttribute("id", "postReply");
+		newSubmit.setAttribute("value", "Post Reply");
+		newUl.className = "replies";
+		newLi.className= "replying";
+
+		newReply.appendChild(newInput);
+		newReply.appendChild(newSubmit);
+		newForm.appendChild(newReply);
+
+		newLi.appendChild(newForm);
+		newUl.appendChild(newLi);
+
+		if(childUl){
+			childUl.insertBefore(newLi, childUl.firstChild);
+			childUl.style.display = "block";
+		}
+
+		if(!childUl){
+			parentUl.appendChild(newUl);
+			newUl.style.display = "block";
+		}
+	}
+
+	function removeReplyInput(){
+		var commentsList = document.getElementById("commentsList");
+		var replyInput = document.querySelector('.replying');
+		commentsList.dataset.replying = "0";
+		replyInput.remove();
+	}
+
+	function createReply(event, message){
+		var newUl = document.createElement('ul');
+		var newLi = document.createElement('li');
+		var newReply = document.createElement('div');
+		var newProfileImage = document.createElement('div');
+		var newContext = document.createElement('p');
+		var newMenu = document.createElement('div');
+
+		var parentUl = event;
+		var childUl = parentUl.querySelector('.replies');
+
+		var comment = parentUl.querySelector(".comment");
+		var commentId = comment.getAttribute("data-id");
+
+		newUl.className = "replies";
+		newReply.className = "reply";
+		newProfileImage.className = "profileImage";
+		newProfileImage.innerHTML = '<img src="/uploads/{{ accountImage }}" width="40" height="40" title="{{ user }}">';
+		newMenu.className = "commentMenu";
+
+		newContext.innerText = message;
+		newMenu.innerHTML = '<a href="">[Report]</a>';
+
+		newReply.appendChild(newProfileImage);
+		newReply.appendChild(newContext);
+		newReply.appendChild(newMenu);
+		
+		newLi.appendChild(newReply);
+		newUl.appendChild(newLi);
+
+		if(childUl){
+			childUl.appendChild(newLi);
+			return(commentId);
+		}
+
+		if(!childUl){
+			parentUl.appendChild(newUl);
+			return(commentId);
+		}
+
+	}
+
+	function collapseReplies(event){
+		var comment = event.parentNode.parentNode.parentNode;
+		var replies = comment.querySelector('.replies');
+
+		if(replies.style.display == "none"){
+			replies.style.display = "block";
+			event.innerText = "[ - ]";
+		}else{
+			replies.style.display = "none";
+			event.innerText = "[ + ]";
+		}
+
+
+		
+	}
+</script>
+{% endblock %}
+
+{% block scripts %}
+
+{% include "static/js/profile.js" %}
+
+{% endblock %}
