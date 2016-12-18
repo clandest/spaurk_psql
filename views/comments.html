@@ -2,6 +2,10 @@
 {% extends "template.html" %}
 
 {% block main %}
+{% if comments == '' %}
+<p> profile user doest not have any comments. Login to leave them a comment </p>
+{% endif %}
+
 <form name="commentForm" id="commentForm" action="" enctype="multipart/form-data" method="POST">
 {% if user %}
 	<div class="new-comment">

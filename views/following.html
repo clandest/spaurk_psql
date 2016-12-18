@@ -5,6 +5,9 @@
 
 {% block main %}
 <a href="followers">[ Followers ]</a>
+{% if followers == '' %}
+<p> profile user is not following any users </p>
+{% endif %}
 <div id="posts" >
 {% for follower in followers %}
 <div class="post" id="Discover" data-id="{{ follower.id }}"> <!-- START OF POST -->
@@ -18,7 +21,12 @@
 	</div>
 	</a>
 	<div class="postFooter">
-		<span><a href="/follows/{{ follower.follow_id }}" id="follows">[ Follow ]</a></span>
+		{% if user == userProfile %} 
+		<span><a href="/follows/{{ follower.follow_id }}" id="follows" class="removeFollow">[ Unfollow ]</a></span>
+		{% else %}
+		<span><a href="/follows/{{ follower.follow_id }}" id="follows" class="addFollow">[ Follow ]</a></span>
+		{% endif %}
+
 	</div>
 </div> <!-- END OF POST -->
 
@@ -27,6 +35,23 @@
 
 <script>
 	var posts = document.querySelectorAll("#playBtn");
+	var follows = document.querySelectorAll("#follows");
+
+
+	if('{{ user }}' != ''){
+		follows.forEach(function(follow, i){
+			follow.addEventListener("click", function(event){
+				if(event.target.className == "addFollow"){
+					event.target.className = "removeFollow";
+					event.target.innerText = "[ Unfollow]";
+				}else{
+					event.target.className = "addFollow";
+					event.target.innerText = "[ Follow ]";
+				}
+
+			});
+		});
+	}
 
 	posts.forEach(function(post, i){
 		var audio = document.getElementById("audio" + post.getAttribute("data-id"));

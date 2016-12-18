@@ -6,6 +6,19 @@ module.exports = function(app, db, upload){
 	app.get('/', function(req, res, next){
 
 		db('posts')
+		.join('users', 'users.uid', 'posts.user_id')
+		.select('posts.id',
+						'posts.title',
+						'posts.artist',
+						'posts.start',
+						'posts.stop',
+						'posts.genre',
+						'posts.tags',
+						'posts.category',
+						'posts.audioFile',
+						'posts.imageFile',
+						'users.profileImage',
+						'users.username')
 		.then(function(posts){
 			res.render('index.html',{
 				messages: req.flash('alert'),
@@ -22,6 +35,7 @@ module.exports = function(app, db, upload){
 		var postId = req.params.id;
 		var postAudio;
 		var postImage;
+		if(req.session.user == "admin"){
 			db('posts')
 			.where({ id: postId })
 			.then(function(deletedPost){
@@ -36,18 +50,6 @@ module.exports = function(app, db, upload){
 					.where({ post_id: postId })
 					.del()
 					.then(function(watchlist){
-						fs.unlink('views/static/uploads/' + postAudio), function(err){
-							if(err)
-								console.log(err);
-							else
-								console.log('deleted audio ' + postAudio);	
-						};
-						fs.unlink('views/static/uploads/' + postImage), function(err){
-							if(err)
-								console.log(err);
-							else
-								console.log('deleted image ' + postImage);	
-						};
 						return db('posts')
 							.where('id', postId)
 							.del()
@@ -56,19 +58,26 @@ module.exports = function(app, db, upload){
 						console.log(error);
 					});
 				}else{
+					if(fs.existsSync('views/static/uploads/' + postAudio)){
+						fs.unlinkSync('views/static/uploads/' + postAudio);
+					}
+					if(fs.existsSync('views/static/uploads/' + postImage)){
+						fs.unlinkSync('views/static/uploads/' + postImage);
+					}
 					return db('posts')
 						.where({ id: postId })
 						.del()
 				}
 			})
 			.then(function(deleted){
-				console.log('deleted post ');
-				console.log(deleted);
-				res.status('204').end();
+				var backURL = req.header('Referer') || '/';
+				res.redirect(backURL);
+
 			})
 			.catch(function(error){
 				console.log(error);
 			});
+		}
 	});
 
 
@@ -132,7 +141,8 @@ module.exports = function(app, db, upload){
 					req.session.user = user[0].username;
 					req.session.accountImage = user[0].profileImage;
 					req.session.isLogged = true;
-					res.redirect('/');
+					var backURL = req.header('Referer') || '/';
+					res.redirect(backURL);
 				});
 			}else{
 				req.flash('alert', 'Invalid username or password');
@@ -143,7 +153,8 @@ module.exports = function(app, db, upload){
 
 	app.get('/logout', function(req, res, next){
 		req.session.destroy(function(){
-			res.redirect('/');
+				var backURL = req.header('Referer') || '/';
+				res.redirect(backURL);
 		});
 	});
 
@@ -230,8 +241,11 @@ module.exports = function(app, db, upload){
 			.then(function(profileImage){
 				req.session.accountImage = profileImage[0].profileImage;
 				res.status('204').end();
-				if(oldProfileImage != 'defaultProfile.png')
-					fs.unlink('views/static/uploads/' + oldProfileImage);
+				if(oldProfileImage != 'defaultProfile.png'){
+					if(fs.existsSync('views/static/uploads/' + oldProfileImage)){
+							fs.unlinkSync('views/static/uploads/' + oldProfileImage);
+						}
+				}
 			})
 			.catch(function(error){
 				console.log(error);
@@ -300,6 +314,7 @@ module.exports = function(app, db, upload){
 
 		db('users')
 		.where({ username: profileUser })
+
 		.then(function(profileUser){
 			profileImage = profileUser[0].profileImage;
 			profileUserId = profileUser[0].uid;
@@ -311,6 +326,20 @@ module.exports = function(app, db, upload){
 			profileAbout = profile[0].about;
 			return db('posts')
 				.where({ user_id: profileUserId })
+				.join('users', 'users.uid', 'posts.user_id')
+				.select('posts.id',
+								'posts.title',
+								'posts.artist',
+								'posts.start',
+								'posts.stop',
+								'posts.genre',
+								'posts.tags',
+								'posts.category',
+								'posts.audioFile',
+								'posts.imageFile',
+								'users.profileImage',
+								'users.username')
+
 		})
 		.then(function(posts){
 			res.render('profile.html', {
@@ -338,31 +367,36 @@ module.exports = function(app, db, upload){
 		var user = req.session.user;
 		var postId = req.params.id;
 		var userId;
-		db('users')
-		.where({ username: user })
-		.select('uid')
-		.then(function(user){
-			userId = user[0].uid;
-			return db('watchlist')
-				.where({ user_id: user[0].uid, post_id: postId })
-		})
-		.then(function(watchlist){
-			if(watchlist != ''){
+
+		if(user){
+			db('users')
+			.where({ username: user })
+			.select('uid')
+			.then(function(user){
+				userId = user[0].uid;
 				return db('watchlist')
-					.where({ 'watchlist.user_id': watchlist[0].user_id, 
-								 'watchlist.post_id': watchlist[0].post_id })
-					.del()
-			}else{
-				return db('watchlist')
-					.insert({ user_id: userId, post_id: postId })
-			}
-		})
-		.then(function(success){
+					.where({ user_id: user[0].uid, post_id: postId })
+			})
+			.then(function(watchlist){
+				if(watchlist != ''){
+					return db('watchlist')
+						.where({ 'watchlist.user_id': watchlist[0].user_id, 
+									 'watchlist.post_id': watchlist[0].post_id })
+						.del()
+				}else{
+					return db('watchlist')
+						.insert({ user_id: userId, post_id: postId })
+				}
+			})
+			.then(function(success){
+				res.status('204').end();
+			})
+			.catch(function(error){
+				console.log(error);
+			});
+		}else{
 			res.status('204').end();
-		})
-		.catch(function(error){
-			console.log(error);
-		});
+		}
 	});
 
 	app.get('/p/:user/watchlist', function(req, res){
@@ -388,6 +422,20 @@ module.exports = function(app, db, upload){
 			return db('watchlist')
 				.where('watchlist.user_id', profileUserId)
 				.join('posts', 'watchlist.post_id', 'posts.id')
+				.join('users', 'users.uid', 'posts.user_id')
+				.select('posts.id',
+								'posts.title',
+								'posts.artist',
+								'posts.start',
+								'posts.stop',
+								'posts.genre',
+								'posts.tags',
+								'posts.category',
+								'posts.audioFile',
+								'posts.imageFile',
+								'users.profileImage',
+								'users.username')
+
 		})
 		.then(function(watchlists){
 			res.render('watchlist.html', {
@@ -399,7 +447,7 @@ module.exports = function(app, db, upload){
 				flashBanner: profileFlashBanner,
 				about: profileAbout,
 				isLogged: req.session.isLogged,
-				userProfile: req.params.user,
+				userProfile: profileUser,
 				profileUserId: profileUserId,
 				posts: watchlists
 			});
@@ -472,7 +520,6 @@ module.exports = function(app, db, upload){
 				.join('users', 'follows.follow_id', 'users.uid')
 		})
 		.then(function(follows){
-			console.log(follows);
 			res.render('following.html', {
 				title: req.params.user + ' Following',
 				messages: req.flash('alert'),
@@ -518,7 +565,6 @@ module.exports = function(app, db, upload){
 				.join('users', 'follows.user_id', 'users.uid')
 		})
 		.then(function(follows){
-			console.log(follows);
 			res.render('following.html', {
 				title: req.params.user + ' Following',
 				messages: req.flash('alert'),

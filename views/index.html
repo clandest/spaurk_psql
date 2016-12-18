@@ -16,7 +16,7 @@
 	<audio src="/uploads/{{ post.audioFile }}" id="audio{{ post.id }}" data-isPlaying="0" data-start="{{ post.start }}" data-stop="{{ post.stop }}"></audio>
 	<div class="postHeader">
 		<div class="postTitle">
-			<div class="postArtist"><a href="/delete/{{ post.id }}">{{ post.artist }}</a></div>
+			<div class="postArtist">{% if user == "admin" %}<a href="/delete/{{ post.id }}">{{ post.artist }}</a>{% else %}{{ post.artist }}{% endif %}</div>
 			<div class="postSong">{{ post.title | truncate(40) }}</div>
 		</div>
 	</div>
@@ -28,22 +28,21 @@
 				<span>{{ post.tags }}</span>
 				{% endif %}
 			</div>
-			<div id="playTime-{{ post.id }}" class="playTime"><span id="start-{{ post.id }}" class="start">0:00</span>/<span id="stop-{{ post.id }}" class="stop">0:00</span></div>
+			<div id="playTime-{{ post.id }}" class="playTime"><span><div id="start-{{ post.id }}" class="start">0:00</div> / <div id="stop-{{ post.id }}" class="stop">0:00</div></span></div>
 		</div> 
 	</div>
 	<div class="postFooter">
 		<div class="dropdown">	
 			<img src="/images/menu.png">
 			<div class="dropdown-content">
-				<a href="?Alternative">Alternative</a>
-				<a href="">Electronic</a>
-				<a href="">R&B</a>
-				<a href="">Pop</a>
-				<a href="">Rock</a>
+				<a href="#{{ post.category }}" id="{{ post.category }}">Category: {{ post.category }}</a>
+				<a href="#{{ post.genre }}">Genre: {{ post.genre }}</a>
+				<img src="/uploads/{{ post.profileImage }}" width="25px" height="25px">
+				<a href="/p/{{ post.username }}">{{ post.username }}</a>
 			</div>
 		</div>
 		<div class="postMenu">
-			<a href="/watchlist/{{ post.id }}"><img src="/images/bookmark.png"></a><img src="/images/spaurk_icon.png"> 
+			<a href="/watchlist/{{ post.id }}"><img id="watching" class="watch"  src="/images/bookmark.png"></a><img src="/images/spaurk_icon.png"> 
 		</div>
 	</div>
 </div> <!-- END OF POST -->
@@ -53,6 +52,24 @@
 
 <script>
 	var posts = document.querySelectorAll("#playBtn");
+
+	var watching = document.querySelectorAll("#watching");
+
+	if('{{ user }}' != ''){
+		watching.forEach(function(watch, i){
+			watch.addEventListener("click", function(event){
+				if(event.target.className == "watch"){
+					event.target.className = "watching";
+					event.target.src = "/images/bookmarkClick.png";
+				}else{
+					event.target.className = "watch";
+					event.target.src = "/images/bookmark.png";
+				}
+
+			});
+
+		});
+	}
 
 	posts.forEach(function(post, i){
 		var audio = document.getElementById("audio" + post.getAttribute("data-id"));

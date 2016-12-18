@@ -61,13 +61,14 @@
     <div class="profileImage"><img id="profileImage" src="/uploads/{{ profileImage }}" height="100px" width="100px"></div>
 		<span class="profileName">{{ userProfile }}</span>
 		<div class="profileSocial">
-      <div class="follow"><a href="/follows/{{ profileUserId }}" id="follows">[ Follow ]</a></div>
+      {% if  user != userProfile %}
+      <div class="follow"><a href="/follows/{{ profileUserId }}" class="addFollow" id="follows">[ Follow ]</a></div>{% endif %}
 			<div id="sound-cloud"></div>
 			<div id="band-camp"></div>
 			<div id="twitter"></div>
 		</div>
-    <div class="aboutField" id="about" data-token="0"><p id="aboutContext">{{ about }}</p></div>
-    <div class="flashBanner" id="flashBanner" data-token="0"><p id="flashBannerContext">{{ flashBanner }}</p></div>	
+    <div class="aboutField" id="about" data-token="0"><p id="aboutContext">{% if about %}{{ about }}{% else %} Profile user  needs to customize this About info {% endif %}</p></div>
+    <div class="flashBanner" id="flashBanner" data-token="0"><p id="flashBannerContext">{% if flashBanner %}{{ flashBanner }}{% else %} Profile user needs to customize this short info field {% endif %}</p></div>	
 		{% endblock %}
 		{% block nav %}
 		<nav>
@@ -277,6 +278,26 @@
 
 {% block scripts %}
 {% endblock %}
+
+<script>
+	var follows = document.querySelectorAll("#follows");
+
+
+	if('{{ user }}' != ''){
+		follows.forEach(function(follow, i){
+			follow.addEventListener("click", function(event){
+				if(event.target.className == "addFollow"){
+					event.target.className = "removeFollow";
+					event.target.innerText = "[ Unfollow]";
+				}else{
+					event.target.className = "addFollow";
+					event.target.innerText = "[ Follow ]";
+				}
+
+			});
+		});
+	}
+</script>
 
   </body>
 </html>
