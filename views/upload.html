@@ -408,6 +408,7 @@ function convertSecondsToString(seconds){
 	var min = Math.floor(seconds / 60);
 	var sec = Math.floor(seconds - min * 60);
 
+	min = padTimer(min, "00");
 	sec = padTimer(sec, "00");
 
 	return min + ":" + sec;

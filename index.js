@@ -2,13 +2,26 @@
 var express = require('express');
 var app	= express();
 var db = require('./db');
+const crypto = require('crypto');
+var mime = require('mime');
 
 var port = process.env.PORT ||  4000;
 var nunjucks = require('nunjucks');
 var flash = require('connect-flash');
 var bodyParser = require('body-parser');
 var multer = require('multer');
-var upload = multer({ dest: __dirname + '/views/static/uploads/' });
+var storage = multer.diskStorage({
+	destination: __dirname + '/views/static/uploads',
+	filename: function (req, file, cb){
+		var mimeType = file.mimetype;
+		var extension = mimeType.split('/');
+		crypto.pseudoRandomBytes(16, function(err, raw){
+			cb(null, raw.toString('hex') + '.' + extension[1]);
+		});
+	}
+});
+
+var upload = multer({ storage: storage });
 var session = require('express-session');
 
 app.use(bodyParser.json());

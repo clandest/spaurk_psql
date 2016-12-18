@@ -1,5 +1,10 @@
 
 var fs = require('fs');
+var bcrypt   = require('bcrypt-nodejs');
+var salt = bcrypt.genSaltSync(8);
+var path = require('path');
+var appDir = path.dirname(require.main.filename);
+var exec = require('child_process').exec;
 
 module.exports = function(app, db, upload){
 
@@ -82,9 +87,16 @@ module.exports = function(app, db, upload){
 
 
 	app.get('/register', function(req, res, done){
-			res.render('register.html',{
-				messages: req.flash('alert')
-			});
+			if(req.session.user)
+				res.redirect('/p/' + req.session.user);	
+		else{
+				res.render('register.html',{
+				messages: req.flash('alert'),
+				isLogged: req.session.isLogged,
+				user: req.session.user,
+				accountImage: req.session.accountImage,
+				});
+		}
 	});
 
 	app.post('/register', upload.single('image'), function(req, res, next){
@@ -93,6 +105,9 @@ module.exports = function(app, db, upload){
 		var email		= req.body.email;
 		var date =	new Date();
 		var profileImage;
+		
+		password = generateHash(password);
+
 		if(req.file)
 			var profileImage = req.file.filename;
 		else
@@ -134,13 +149,15 @@ module.exports = function(app, db, upload){
 	app.post('/login/', function(req, res, next){
 		var username = req.body.username;
 		var password = req.body.password;
+
 		
-		db('users').where({ username: username, password: password }).then(function(user){
-			if(user != ''){
+		db('users').where({ username: username }).then(function(user){
+			if(user && validateHash(password, user[0].password) == true){
 				req.session.regenerate(function(){
 					req.session.user = user[0].username;
 					req.session.accountImage = user[0].profileImage;
 					req.session.isLogged = true;
+					req.flash('alert', 'successfull login');
 					var backURL = req.header('Referer') || '/';
 					res.redirect(backURL);
 				});
@@ -179,8 +196,8 @@ module.exports = function(app, db, upload){
 		var userId;
 		var title = req.body.title;
 		var artist = req.body.artist;
-		var start = req.body.start;
-		var stop = req.body.stop;
+		var start = convertStringToSeconds(req.body.start);
+		var stop = convertStringToSeconds(req.body.stop) - start;
 		var genre = req.body.genre;
 		var tags = req.body.tags;
 		var category = req.body.categoryList;
@@ -188,30 +205,55 @@ module.exports = function(app, db, upload){
 		if(typeof req.files['imageElem'] !== "undefined")
 			var imageFile = req.files['imageElem'][0].filename;
 
-		db('users')
-		.where({ username: user })
-		.select('uid')
-		.then(function(user){
-			userId = user[0].uid;	
-			return db('posts')
-				.insert({ user_id: userId,
-									title: title,	
-									artist: artist,
-									start: start,
-									stop: stop,
-									genre: genre,
-									tags: tags,
-									category: category,
-									audioFile: audioFile,
-									imageFile: imageFile })
-		})
-		.then(function(post){
-			req.flash('alert', 'succesfull upload');	
-			res.status('204').end();
-		})
-		.catch(function(error){
-			console.log(error);
+		var audioLocation = appDir + '/views/static/uploads/' + audioFile;
+		var destinationAudio = 'clip' + audioFile;
+		var audioDestination = appDir + '/views/static/uploads/' + destinationAudio;
+
+		var cmd = 'ffmpeg -i '+ audioLocation + ' -ss ' + start + ' -t ' + stop + ' -acodec copy ' + audioDestination;
+
+		exec(cmd, function(err, stdout, stderr){
+			if(err){
+				console.log(err);
+				if(fs.existsSync('views/static/uploads/' + audioFile)){
+						fs.unlinkSync('views/static/uploads/' + audioFile);
+						console.log('deleted audio ' + audioFile);
+				}
+				if(fs.existsSync('views/static/uploads/' + imageFile)){
+					fs.unlinkSync('views/static/uploads/' + imageFile);
+						console.log('deleted  image ' + imageFile);
+				}
+			}else{
+				if(fs.existsSync('views/static/uploads/' + audioFile)){
+						fs.unlinkSync('views/static/uploads/' + audioFile);
+				}
+				db('users')
+				.where({ username: user })
+				.select('uid')
+				.then(function(user){
+					userId = user[0].uid;	
+					return db('posts')
+						.insert({ user_id: userId,
+											title: title,	
+											artist: artist,
+											start: start,
+											stop: stop,
+											genre: genre,
+											tags: tags,
+											category: category,
+											audioFile: destinationAudio,
+											imageFile: imageFile })
+				})
+				.then(function(post){
+					req.flash('alert', 'succesfull upload');	
+					res.status('204').end();
+				})
+				.catch(function(error){
+					req.flash('alert', 'upload failed');
+					req.redirect('/upload');
+				});
+			}
 		});
+
 
 	});
 
@@ -757,4 +799,27 @@ module.exports = function(app, db, upload){
 
 	});
 
+
 };
+
+
+function generateHash(password){
+	return bcrypt.hashSync(password, salt, null);
+}
+
+function validateHash(password, userPass, callback){
+	return bcrypt.compareSync(password, userPass, callback);
+}
+
+function convertStringToSeconds(str){
+	var result = str.split(":");
+	var min = parseInt(result[0], 10);
+	var sec = parseInt(result[1], 10);
+
+	var newMin = min * 60;
+	var newSec = newMin + sec;
+	var newTime = newSec;
+
+	return newTime;
+}
+
