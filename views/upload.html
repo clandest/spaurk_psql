@@ -93,7 +93,7 @@
 		<label for="tags">Tags:</label>
 		<input type="text" name="tags" id="tags" maxlength="60">
 		<label for="categoryList">Category</label>
-		<select name="categoryList">
+		<select name="categoryList" id="category">
 			<option value="Discover">Discover</option>
 			<option value="Experimental">Experimental</option>
 			<option value="Independent">Independent</option>
@@ -206,15 +206,31 @@ window.URL = window.URL || window.webkitURL;
 	});
 
 	form.addEventListener("submit", function(e){
+		var start = document.getElementById('fileStart').value;
+		var stop = document.getElementById('fileStop').value;
+		var title = document.getElementById('title').value;
+		var artist = document.getElementById('artist').value;
+		var genre = document.getElementById('genre').value;
+		var tags = document.getElementById('tags').value;
+		var select = document.getElementById('category');
+		var category = select.options[select.selectedIndex].value;
+
 		e.preventDefault();
-		if(!isIE || !isEdge){
 			var progressBar = document.getElementById("progress");
 
-			formData = new FormData(form);
-			formData.set('fileElem', fileMP3);
+			formData = new FormData();
+			formData.append('fileElem', fileMP3, 'filename');
+			formData.append('start', start);
+			formData.append('stop', stop);
+			formData.append('title', title);
+			formData.append('artist', artist);
+			formData.append('genre', genre);
+			formData.append('tags', tags);
+			formData.append('category', category);
+
 
 			getAlbumCover(fileMP3, function(cover){
-				formData.set('imageElem', cover);
+				formData.append('imageElem', cover, 'imagename');
 
 				var req = new XMLHttpRequest();
 				req.open("POST", "upload", true);
@@ -241,7 +257,6 @@ window.URL = window.URL || window.webkitURL;
 				}
 				req.send(formData);
 			});
-		}
 	}, false);
 
 function getAlbumCover(data, callback){

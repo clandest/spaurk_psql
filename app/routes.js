@@ -200,7 +200,7 @@ module.exports = function(app, db, upload){
 		var stop = convertStringToSeconds(req.body.stop) - start;
 		var genre = req.body.genre;
 		var tags = req.body.tags;
-		var category = req.body.categoryList;
+		var category = req.body.category;
 		var audioFile = req.files['fileElem'][0].filename;
 		if(typeof req.files['imageElem'] !== "undefined")
 			var imageFile = req.files['imageElem'][0].filename;
