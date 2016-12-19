@@ -106,8 +106,8 @@ function playPause(post, audio, tags, album, time, albumImages){
 		if(audio.src){
 			for(var i = 0; i < sounds.length; i++){
 				if(audio.id != sounds[i].id){
-					var start = 0;
-					sounds[i].currentTime = start;
+					var start = convertStringToSeconds(sounds[i].dataset.start);
+					sounds[i].currentTime = 0;
 					sounds[i].pause();
 					sounds[i].setAttribute("data-isPlaying", "0");
 					posts[i].className = "play";
