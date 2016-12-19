@@ -48,12 +48,15 @@
 </div>
 
 <script>
+
 	var posts = document.querySelectorAll("#playBtn");
+	var postsArray = [].slice.call(posts);
 
 	var watching = document.querySelectorAll("#watching");
+	var watchingArray = [].slice.call(watching);
 
 	if('{{ user }}' != ''){
-		watching.forEach(function(watch, i){
+		watchingArray.forEach(function(watch, i){
 			watch.addEventListener("click", function(event){
 				if(event.target.className == "watch"){
 					event.target.className = "watching";
@@ -68,8 +71,7 @@
 		});
 	}
 
-
-	posts.forEach(function(post, i){
+	postsArray.forEach(function(post, i){
 		var audio = document.getElementById("audio" + post.getAttribute("data-id"));
 		var album = document.getElementById("albumImage-" + post.getAttribute("data-id"));
 		var tags = document.getElementById("postTags-" + post.getAttribute("data-id"));
