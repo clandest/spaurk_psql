@@ -147,7 +147,8 @@ function flushScreen(id){
 function setDataTime(audio){
 	var time = audio.getAttribute("data-start");
 	var setTime = convertStringToSeconds(time);
-	audio.currentTime = 0;
+	if(audio.readyState > 0)
+		audio.currentTime = 0;
 }
 
 function setStopTime(post, audio){

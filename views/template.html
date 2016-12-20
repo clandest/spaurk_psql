@@ -62,7 +62,7 @@
 		<span class="profileName">{{ userProfile }}</span>
 		<div class="profileSocial">
       {% if  user != userProfile %}
-      <div class="follow"><a href="/follows/{{ profileUserId }}" class="addFollow" id="follows">[ Follow ]</a></div>{% endif %}
+      <div class="follow"><a href="/follows/{{ profileUserId }}" class="addFollow" id="follow">[ Follow ]</a></div>{% endif %}
 			<div id="sound-cloud"></div>
 			<div id="band-camp"></div>
 			<div id="twitter"></div>
@@ -280,22 +280,20 @@
 {% endblock %}
 
 <script>
-	var follows = document.querySelectorAll("#follows");
+	var follows = document.querySelector("#follow");
 
 
 	if('{{ user }}' != ''){
-		follows.forEach(function(follow, i){
-			follow.addEventListener("click", function(event){
-				if(event.target.className == "addFollow"){
-					event.target.className = "removeFollow";
-					event.target.innerText = "[ Unfollow]";
-				}else{
-					event.target.className = "addFollow";
-					event.target.innerText = "[ Follow ]";
-				}
+    follow.addEventListener("click", function(event){
+      if(event.target.className === "addFollow"){
+        event.target.className = "removeFollow";
+        event.target.innerText = "[ Unfollow]";
+      }else{
+        event.target.className = "addFollow";
+        event.target.innerText = "[ Follow ]";
+      }
 
 			});
-		});
 	}
 </script>
 
