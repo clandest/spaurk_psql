@@ -108,7 +108,8 @@ function playPause(post, audio, tags, album, time, albumImages){
 			for(var i = 0; i < sounds.length; i++){
 				if(audio.id != sounds[i].id){
 					var start = convertStringToSeconds(sounds[i].dataset.start);
-					sounds[i].currentTime = 0;
+					if(sounds[i].readyState > 0)
+						sounds[i].currentTime = 0;
 					sounds[i].pause();
 					sounds[i].setAttribute("data-isPlaying", "0");
 					posts[i].className = "play";
@@ -231,7 +232,5 @@ function convertStringToSeconds(str){
 }
 
 
-</script>
-
-{% endblock %}
+</script>{% endblock %}
 
