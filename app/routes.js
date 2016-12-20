@@ -222,6 +222,7 @@ module.exports = function(app, db, upload){
 					fs.unlinkSync('views/static/uploads/' + imageFile);
 						console.log('deleted  image ' + imageFile);
 				}
+				res.status('504').end();
 			}else{
 				if(fs.existsSync('views/static/uploads/' + audioFile)){
 						fs.unlinkSync('views/static/uploads/' + audioFile);
