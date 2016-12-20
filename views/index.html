@@ -86,7 +86,8 @@
 			setPreviewDuration(audio, post.getAttribute("data-id"));
 		});
 		post.onclick = function(){
-			playPause(post, audio, tags, album, time, albumImages[i]);
+			if(audio.readyState > 0)
+				playPause(post, audio, tags, album, time, albumImages[i]);
 		}
 
 		post.onmouseover = function(){

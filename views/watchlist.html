@@ -46,10 +46,7 @@
 
 {% endfor %}
 </div>
-
 <script>
-
-
 	var posts = document.querySelectorAll("#playBtn");
 	var postsArray = [].slice.call(posts);
 
@@ -85,7 +82,8 @@
 			setPreviewDuration(audio, post.getAttribute("data-id"));
 		});
 		post.onclick = function(){
-			playPause(post, audio, tags, album, time, albumImages[i]);
+			if(audio.readyState > 0)
+				playPause(post, audio, tags, album, time, albumImages[i]);
 		}
 
 		post.onmouseover = function(){
