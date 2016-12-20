@@ -39,7 +39,7 @@
 			</div>
 		</div>
 		<div class="postMenu">
-			<a href="/watchlist/{{ post.id }}"><img id="watching" class="watch" src="/images/bookmark.png"></a><img src="/images/spaurk_icon.png"> 
+			<a href="/watchlist/{{ post.id }}"><img id="watching" class="watch"></a><img src="/images/spaurk_icon.png"> 
 		</div>
 	</div>
 </div> <!-- END OF POST -->
@@ -59,10 +59,8 @@
 			watch.addEventListener("click", function(event){
 				if(event.target.className == "watch"){
 					event.target.className = "watching";
-					event.target.src = "/images/bookmarkClick.png";
 				}else{
 					event.target.className = "watch";
-					event.target.src = "/images/bookmark.png";
 				}
 
 			});

@@ -766,7 +766,14 @@ span#start, span#stop{
 	right: -32px;
 }
 
+.watch{
+	content: url("/images/bookmark.png");
+}
 
+
+.watching{
+	content: url("/images/bookmarkClick.png");
+}
 
 
 

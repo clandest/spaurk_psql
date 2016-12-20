@@ -4,7 +4,7 @@ var bcrypt   = require('bcrypt-nodejs');
 var salt = bcrypt.genSaltSync(8);
 var path = require('path');
 var appDir = path.dirname(require.main.filename);
-var exec = require('child_process').exec;
+var exec = require('child-process-promise').exec;
 
 module.exports = function(app, db, upload){
 
@@ -209,54 +209,130 @@ module.exports = function(app, db, upload){
 		var destinationAudio = 'clip' + audioFile;
 		var audioDestination = appDir + '/views/static/uploads/' + destinationAudio;
 
-		var cmd = 'ffmpeg -i '+ audioLocation + ' -ss ' + start + ' -t ' + stop + ' -acodec copy ' + audioDestination;
+		var audioExtension = audioFile.split(".");
+		var audioConvertedLocation = appDir + '/views/static/uploads/' + audioExtension[0] + '.mp3';
+		var audioConvertedDestination = appDir + '/views/static/uploads/clip' + audioExtension[0] + '.mp3';
+		var audioFileName = 'clip' + audioExtension[0] + '.mp3';
 
-		exec(cmd, function(err, stdout, stderr){
-			if(err){
-				console.log(err);
-				if(fs.existsSync('views/static/uploads/' + audioFile)){
-						fs.unlinkSync('views/static/uploads/' + audioFile);
-						console.log('deleted audio ' + audioFile);
-				}
-				if(fs.existsSync('views/static/uploads/' + imageFile)){
-					fs.unlinkSync('views/static/uploads/' + imageFile);
-						console.log('deleted  image ' + imageFile);
-				}
-				res.status('504');
-				req.flash('alert', 'File format not supported');
-				res.redirect('/upload');
-			}else{
-				if(fs.existsSync('views/static/uploads/' + audioFile)){
-						fs.unlinkSync('views/static/uploads/' + audioFile);
-				}
-				db('users')
-				.where({ username: user })
-				.select('uid')
-				.then(function(user){
-					userId = user[0].uid;	
-					return db('posts')
-						.insert({ user_id: userId,
-											title: title,	
-											artist: artist,
-											start: start,
-											stop: stop,
-											genre: genre,
-											tags: tags,
-											category: category,
-											audioFile: destinationAudio,
-											imageFile: imageFile })
+
+		if(audioExtension[1] != 'mp3'){
+			var cmd = 'ffmpeg -i ' + audioLocation + ' -vn -ar 44100 -ac 2 -ab 192k -f mp3 ' + audioConvertedLocation;
+			exec(cmd)
+				.then(function(convert){
+					if(fs.existsSync(audioLocation)){
+						fs.unlinkSync(audioLocation);
+						console.log('deleted audio old format ' + audioLocation);
+					}
+					audioLocation = audioConvertedLocation;
+					audioDestination = audioConvertedDestination;
+					console.log("successfull convert");
 				})
-				.then(function(post){
-					req.flash('alert', 'succesfull upload');	
-					res.status('204').end();
+				.then(function(trim){
+					var cmd = 'ffmpeg -i '+ audioLocation + ' -ss ' + start + ' -t ' + stop + ' -acodec copy ' + audioDestination;
+					exec(cmd)
+						.then(function(trim){
+							console.log("successfull trim");
+							if(fs.existsSync(audioLocation)){
+								fs.unlinkSync(audioLocation);
+								console.log('deleted audio new format ' + audioLocation);
+							}
+						})
+						.catch(function(err){
+							console.log("error trimming: " + err);
+						});
 				})
-				.catch(function(error){
-					req.flash('alert', 'upload failed');
-					req.redirect('/upload');
+				.then(function(){
+					db('users')
+						.where({ username: user })
+						.select('uid')
+						.then(function(user){
+							userId = user[0].uid;	
+							return db('posts')
+								.insert({ user_id: userId,
+													title: title,	
+													artist: artist,
+													start: start,
+													stop: stop,
+													genre: genre,
+													tags: tags,
+													category: category,
+													audioFile: audioFileName,
+													imageFile: imageFile })
+						})
+						.then(function(post){
+							req.flash('alert', 'succesfull upload');	
+							res.status('204').end();
+						})
+						.catch(function(err){
+							console.log('there was a post error: ' + err);	
+						});
+				})
+				.catch(function(err){
+					console.log('ERROR: ', err);
+					if(fs.existsSync(audioLocation)){
+							fs.unlinkSync(audioLocation);
+							console.log('deleted audio ' + audioFile);
+					}
+					if(fs.existsSync('views/static/uploads/' + imageFile)){
+						fs.unlinkSync('views/static/uploads/' + imageFile);
+							console.log('deleted  image ' + imageFile);
+					}
+					res.status('504');
+					req.flash('alert', 'File format not supported');
+					res.redirect('/upload');
 				});
-			}
-		});
+		}else{
+			var cmd = 'ffmpeg -i '+ audioLocation + ' -ss ' + start + ' -t ' + stop + ' -acodec copy ' + audioDestination;
+			exec(cmd)
+				.then(function(trim){
+					console.log("successfull trim");
+					if(fs.existsSync(audioLocation)){
+						fs.unlinkSync(audioLocation);
+						console.log('deleted audio new format ' + audioLocation);
+					}
+				})
+				.then(function(){
+					db('users')
+						.where({ username: user })
+						.select('uid')
+						.then(function(user){
+							userId = user[0].uid;	
+							return db('posts')
+								.insert({ user_id: userId,
+													title: title,	
+													artist: artist,
+													start: start,
+													stop: stop,
+													genre: genre,
+													tags: tags,
+													category: category,
+													audioFile: audioFileName,
+													imageFile: imageFile })
+						})
+						.then(function(post){
+							req.flash('alert', 'succesfull upload');	
+							res.status('204').end();
+						})
+						.catch(function(err){
+							console.log('there was a post error: ' + err);	
+						});
+				})
+				.catch(function(err){
+					console.log('ERROR: ', err);
+					if(fs.existsSync(audioLocation)){
+							fs.unlinkSync(audioLocation);
+							console.log('deleted audio ' + audioFile);
+					}
+					if(fs.existsSync('views/static/uploads/' + imageFile)){
+						fs.unlinkSync('views/static/uploads/' + imageFile);
+							console.log('deleted  image ' + imageFile);
+					}
+					res.status('504');
+					req.flash('alert', 'File format not supported');
+					res.redirect('/upload');
+				});
 
+		}
 
 	});
 

@@ -9,13 +9,14 @@
   "dependencies": {
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "*",
+    "child-process-promise": "^2.2.0",
     "connect-flash": "*",
     "express": "^4.13.1",
     "express-session": "*",
     "knex": "^0.8.6",
     "multer": "*",
     "nunjucks": "*",
-    "pg": "^4.4.0",
+    "pg": "^4.4.0"
   },
   "author": "",
   "license": "ISC"

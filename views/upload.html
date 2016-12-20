@@ -51,7 +51,7 @@
 <audio id="audio" autoplay="false" data-isPlaying="0"></audio>
 
 	<div class="form-upload">
-		<a href="#" id="fileSelect">Select a .mp3 file</a><br>
+		<a href="#" id="fileSelect">Select an audio file (always converted to .mp3)</a><br>
 		<div id="fileList"><p>No files selected!</p></div>
 	</div>
 
@@ -115,7 +115,10 @@
 
 	<div class="form-upload">
 	<input class="btn-login" type="submit" name="upload" value="Make New Upload" style="margin: 0 auto;">
-	<div class="progression"><progress id="progress" value="0" style="margin: 0 auto;"></progress></div>
+	<div class="progression" style="margin: 0 auto;">
+		<progress id="progress" value="0"></progress>
+		<div id="convertMp3" style="display: none;">Converting to Mp3... Please wait</div>
+	</div>
 	</div>
 
 </form>
@@ -137,6 +140,7 @@ window.URL = window.URL || window.webkitURL;
 	var fileImage;
 	var fileMP3;
 	var bgImage;
+	var fileExtension;
 
 	var slider = document.getElementById("seekSlider");
 	noUiSlider.create(slider, {
@@ -248,9 +252,15 @@ window.URL = window.URL || window.webkitURL;
 				req.upload.onloaded = function(e){
 					progressBar.value = e.loaded;
 				}
+				req.upload.onload = function(e){
+					if(fileExtension != 'mp3'){
+						console.log('not mp3');
+						var converting = document.getElementById("convertMp3");
+						converting.style.display = "block";
+					}
+				}
 				req.onload = function(event){
 					if(req.status == 204){
-						console.log("Uploaded!");
 						document.location.href = "/";
 					}else
 						console.log("error" + req.status);
@@ -291,8 +301,11 @@ function handleFile(file){
 			setPreviewDuration(audio);
 		});
 		showMetaData(fileMP3);
-		fileList.innerHTML = "<p>" + file.name + "</p>";
+		fileList.innerHTML = "<p>" + file[0].name + "</p>";
 		slider.noUiSlider.set(value = 0);
+		var fileType = file[0].type;
+		fileType = fileType.split('/');
+		fileExtension = fileType[1];
 	}
 }
 
