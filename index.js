@@ -17,6 +17,8 @@ var storage = multer.diskStorage({
 		var extension = mimeType.split('/');
 		if(extension[1] == 'mpeg')
 			extension[1] = 'mp3';
+		if(extension[1] == 'x-m4a')
+			extension[1] = 'm4a';
 		crypto.pseudoRandomBytes(16, function(err, raw){
 			cb(null, raw.toString('hex') + '.' + extension[1]);
 		});
