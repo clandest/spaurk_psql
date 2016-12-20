@@ -133,14 +133,15 @@ function playPause(post, audio, tags, album, time, albumImages){
 
 function flushScreen(id){
 	var posts = document.querySelectorAll(".post");
-	for(var i = 0; i < posts.length; i++){
-		var album = document.getElementById("albumImage-" + posts[i].getAttribute("data-id"));
-		var tags = document.getElementById("postTags-" + posts[i].getAttribute("data-id"));
-		var time = document.getElementById("playTime-" + posts[i].getAttribute("data-id"));
-		if(posts[i].dataset.id != id){
+	var postsArray = [].slice.call(posts);
+	postsArray.forEach(function(post, i){
+		var album = document.getElementById("albumImage-" + post.getAttribute("data-id"));
+		var tags = document.getElementById("postTags-" + post.getAttribute("data-id"));
+		var time = document.getElementById("playTime-" + post.getAttribute("data-id"));
+		if(post.dataset.id != id){
 			showTags(tags, album, time);
 		}
-	}
+	});
 	
 }
 
